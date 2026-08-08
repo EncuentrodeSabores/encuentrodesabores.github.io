@@ -3135,8 +3135,7 @@
                         return items;
                     }
                 } catch(e) {
-                    firestoreOnline = false;
-                    updateDBStatus('💾 Modo local (Firebase offline)');
+                    console.warn(`⚠️ Falha ao ler "${storeName}" do Firestore (usando cache local):`, e.message);
                 }
             }
             return localData;
@@ -3166,7 +3165,7 @@
                         return merged;
                     }
                 } catch(e) {
-                    firestoreOnline = false;
+                    console.warn(`⚠️ Falha ao ler "${storeName}/${id}" do Firestore (usando cache local):`, e.message);
                 }
             }
             return localItem;
@@ -3198,8 +3197,8 @@
                 try {
                     await firestoreDB.collection(storeName).doc(docId).set(dataToSave, { merge: true });
                 } catch(e) {
-                    firestoreOnline = false;
-                    updateDBStatus('💾 Modo local (Firebase offline)');
+                    console.error(`❌ Falha ao salvar "${storeName}/${docId}" no Firestore (ficou só local):`, e.message);
+                    showNotification('⚠️ No se pudo guardar en el servidor. Verifica tu sesión de admin e intenta de nuevo.');
                 }
             }
             return dataToSave;
@@ -3240,7 +3239,8 @@
                 try {
                     await firestoreDB.collection(storeName).doc(docId).set(dataToSave);
                 } catch(e) {
-                    firestoreOnline = false;
+                    console.error(`❌ Falha ao criar "${storeName}/${docId}" no Firestore (ficou só local):`, e.message);
+                    showNotification('⚠️ No se pudo guardar en el servidor. Verifica tu sesión de admin e intenta de nuevo.');
                 }
             }
             return dataToSave;
@@ -3256,7 +3256,8 @@
                 try {
                     await firestoreDB.collection(storeName).doc(String(id)).delete();
                 } catch(e) {
-                    firestoreOnline = false;
+                    console.error(`❌ Falha ao excluir "${storeName}/${id}" no Firestore (ficou só local):`, e.message);
+                    showNotification('⚠️ No se pudo eliminar en el servidor. Verifica tu sesión de admin e intenta de nuevo.');
                 }
             }
             return true;
@@ -3280,7 +3281,7 @@
                     const snapshot = await firestoreDB.collection(storeName).where(fieldName, '==', value).limit(1).get();
                     if (!snapshot.empty) return snapshot.docs[0].data();
                 } catch(e) {
-                    firestoreOnline = false;
+                    console.warn(`⚠️ Falha ao buscar "${storeName}" por ${indexName} no Firestore (usando cache local):`, e.message);
                 }
             }
             return localItem;
