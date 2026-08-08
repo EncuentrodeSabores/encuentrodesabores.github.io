@@ -3196,10 +3196,12 @@
             // flag firestoreOnline (que vem de um ping único no carregamento da página e
             // pode ficar desatualizada) — assim uma sessão que começou "offline" ainda
             // consegue salvar de verdade assim que a rede/login estiverem prontos.
+            let _savedToServer = false;
             if (firestoreDB) {
                 try {
                     await firestoreDB.collection(storeName).doc(docId).set(dataToSave, { merge: true });
                     firestoreOnline = true;
+                    _savedToServer = true;
                 } catch(e) {
                     console.error(`❌ Falha ao salvar "${storeName}/${docId}" no Firestore (ficou só local):`, e.message);
                     showNotification(`⚠️ No se guardó en el servidor (${e.code || e.message}). Avisa a soporte con este mensaje.`);
@@ -3207,7 +3209,10 @@
             } else {
                 showNotification('⚠️ Sin conexión con el servidor: se guardó solo en este dispositivo.');
             }
-            return dataToSave;
+            // _savedToServer é só um sinal pra quem chamou (ex: saveProduct) decidir se
+            // mostra "salvo com sucesso" — não é um campo de dados real, nunca é lido de
+            // volta do Firestore nem reenviado num dbPut seguinte.
+            return { ...dataToSave, _savedToServer };
         }
 
         // Merge profundo: preserva todos os campos existentes, sobrescreve só os novos
@@ -3241,10 +3246,12 @@
             lsSave(storeName, items);
 
             // Sincroniza com Firestore. Tenta sempre que o SDK existe (ver comentário em dbPut).
+            let _savedToServer = false;
             if (firestoreDB) {
                 try {
                     await firestoreDB.collection(storeName).doc(docId).set(dataToSave);
                     firestoreOnline = true;
+                    _savedToServer = true;
                 } catch(e) {
                     console.error(`❌ Falha ao criar "${storeName}/${docId}" no Firestore (ficou só local):`, e.message);
                     showNotification(`⚠️ No se guardó en el servidor (${e.code || e.message}). Avisa a soporte con este mensaje.`);
@@ -3252,7 +3259,7 @@
             } else {
                 showNotification('⚠️ Sin conexión con el servidor: se guardó solo en este dispositivo.');
             }
-            return dataToSave;
+            return { ...dataToSave, _savedToServer };
         }
 
         async function dbDelete(storeName, id) {
@@ -3788,10 +3795,14 @@
                 currentUser = newUser;
                 updateUserInterface();
                 closeRegisterModal();
-                
-                showNotification(currentLanguage === 'es' 
-                    ? '✅ ¡Cuenta creada con éxito! Bienvenido a Encuentro de Sabores' 
-                    : '✅ Conta criada com sucesso! Bem-vindo ao Encuentro de Sabores');
+
+                // dbAdd já avisa se não sincronizou com o servidor; aqui só confirma o
+                // caso feliz pra não sobrepor esse aviso com uma mensagem de sucesso falsa.
+                if (savedClient && savedClient._savedToServer) {
+                    showNotification(currentLanguage === 'es'
+                        ? '✅ ¡Cuenta creada con éxito! Bienvenido a Encuentro de Sabores'
+                        : '✅ Conta criada com sucesso! Bem-vindo ao Encuentro de Sabores');
+                }
             } catch (error) {
                 console.error('❌ Erro ao registrar cliente:', error);
                 document.getElementById('registerError').textContent = currentLanguage === 'es' 
@@ -4864,24 +4875,29 @@
                 };
                 
                 const storeName = type === 'product' ? STORES.PRODUCTS : STORES.COMBOS;
-                await dbPut(storeName, productData);
-                
+                const saved = await dbPut(storeName, productData);
+
                 if (type === 'product') {
                     await renderProducts();
                 } else {
                     await renderCombos();
                 }
-                
+
                 setTimeout(() => {
                     saveBtn.innerHTML = originalText;
                     saveBtn.disabled = false;
                     updateAllLanguageElements();
-                    
+
                     clearForm();
                     loadProductList();
-                    showNotification(currentLanguage === 'es' 
-                        ? '✅ Producto guardado correctamente' 
-                        : '✅ Produto salvo com sucesso');
+                    // Só anuncia sucesso se realmente chegou no Firestore — dbPut nunca
+                    // lança erro (pra não quebrar o uso offline), então sem essa checagem
+                    // esta mensagem apareceria sempre, mesmo quando só salvou local.
+                    if (saved && saved._savedToServer) {
+                        showNotification(currentLanguage === 'es'
+                            ? '✅ Producto guardado correctamente'
+                            : '✅ Produto salvo com sucesso');
+                    }
                 }, 500);
             } catch (error) {
                 console.error('❌ Erro ao salvar produto:', error);
