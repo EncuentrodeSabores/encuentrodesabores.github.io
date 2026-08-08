@@ -217,7 +217,20 @@
         }
 
         .logo-text {
-            display: none;
+            font-size: 26px;
+            font-weight: 700;
+            line-height: 1.1;
+            color: var(--dark);
+            white-space: nowrap;
+        }
+
+        .logo-text span {
+            display: block;
+            font-size: 15px;
+            font-weight: 500;
+            font-family: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+            color: var(--primary);
+            letter-spacing: 0.5px;
         }
 
         /* Menu - EXTREMAMENTE COMPACTADO */
@@ -720,10 +733,42 @@
         
         /* ===== HERO SECTION ===== */
         .hero {
-            padding: 120px 5% 100px;
-            background: linear-gradient(135deg, #e8f5e9 0%, #e3f2fd 100%);
+            padding: 60px 5% 100px;
+            background: linear-gradient(135deg, #FAF3E8 0%, #F3E3CC 100%);
             position: relative;
             overflow: hidden;
+        }
+
+        .hero-logo-large {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            margin: 0 auto 40px;
+        }
+
+        .hero-logo-large img {
+            width: min(90%, 480px);
+            height: auto;
+            border-radius: 18px;
+            box-shadow: var(--shadow-strong);
+        }
+
+        /* Figurinhas decorativas: recortes redondos das fotos do logo,
+           espalhados como acentos "colados" pela tela. */
+        .food-badge {
+            position: absolute;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 12px 28px rgba(43, 27, 20, 0.28);
+            border: 4px solid var(--white);
+            z-index: 2;
+        }
+
+        .food-badge img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
         
         .hero::before {
@@ -1931,12 +1976,6 @@
             animation: badgePulse 2s infinite;
         }
         
-        /* ===== FLUTUANDO ELEMENTOS DECORATIVOS ===== */
-        .floating-element {
-            position: absolute;
-            z-index: -1;
-            border-radius: 50%;
-        }
     </style>
 </head>
 <body>
@@ -1962,10 +2001,7 @@
     <!-- ===== HEADER EXTREMAMENTE COMPACTADO ===== -->
     <header class="header" id="header">
         <div class="logo" onclick="goToHome()">
-            <div class="logo-icon">
-                <img src="assets/logo.jpg" alt="Encuentro de Sabores" id="mainLogo" fetchpriority="high" decoding="async">
-            </div>
-            <div class="logo-text">Encuentro <span>de Sabores</span></div>
+            <div class="logo-text">Encuentro de Sabores<span>Cocina casera &amp; sabor de verdad</span></div>
         </div>
         
         <nav class="nav">
@@ -1996,6 +2032,9 @@
     <div id="mainContent" role="main" tabindex="-1">
         <!-- ===== HOME PAGE ===== -->
         <section class="hero" id="inicio">
+            <div class="hero-logo-large">
+                <img src="assets/logo.jpg" alt="Encuentro de Sabores" loading="eager" fetchpriority="high">
+            </div>
             <div class="hero-content">
                 <div class="hero-text">
                     <h1 data-es="La Armonía Perfecta entre Frescura y Sazón">
@@ -2042,15 +2081,22 @@
                         La armonía perfecta entre frescura y sazón
                     </div>
                     
-                    <!-- Elementos decorativos -->
-                    <div class="floating-element" style="top: 20px; right: -20px; width: 60px; height: 60px; background: rgba(184, 116, 43, 0.1); animation: floatElement 15s infinite ease-in-out;"></div>
-                    <div class="floating-element" style="bottom: 40px; left: -30px; width: 80px; height: 80px; background: rgba(110, 42, 42, 0.1); animation: floatElement 20s infinite ease-in-out reverse;"></div>
+                    <!-- Figurinhas decorativas: recortes das fotos do logo -->
+                    <div class="food-badge" style="top: -25px; right: -20px; width: 90px; height: 90px; transform: rotate(8deg); animation: floatElement 15s infinite ease-in-out;">
+                        <img src="assets/badge-egg.jpg" alt="" aria-hidden="true" loading="lazy">
+                    </div>
+                    <div class="food-badge" style="bottom: 55px; left: -35px; width: 100px; height: 100px; transform: rotate(-10deg); animation: floatElement 20s infinite ease-in-out reverse;">
+                        <img src="assets/badge-chicken.jpg" alt="" aria-hidden="true" loading="lazy">
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- ===== CARDÁPIO / MENÚ ===== -->
         <section class="products-section" id="cardapio">
+            <div class="food-badge" style="top: 10px; right: 4%; width: 80px; height: 80px; transform: rotate(-6deg);">
+                <img src="assets/badge-herb.jpg" alt="" aria-hidden="true" loading="lazy">
+            </div>
             <div class="container">
                 <h2 class="section-title" data-es="🥗 Nuestro Menú">
                     🥗 Nuestro Menú
@@ -2066,6 +2112,9 @@
 
         <!-- ===== COMBOS ===== -->
         <section class="products-section" id="combos" style="background: var(--light);">
+            <div class="food-badge" style="top: 15px; left: 4%; width: 75px; height: 75px; transform: rotate(7deg);">
+                <img src="assets/badge-egg.jpg" alt="" aria-hidden="true" loading="lazy">
+            </div>
             <div class="container">
                 <h2 class="section-title" data-es="🎁 Combos Promocionales">
                     🎁 Combos Promocionales
