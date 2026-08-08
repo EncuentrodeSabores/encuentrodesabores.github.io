@@ -2869,6 +2869,12 @@
         let firebaseStorage = null;
         let firestoreDB = null;
         let firebaseReadyPromise = null;
+        // Resolve assim que o Firebase Auth confirma se há (ou não) uma sessão de
+        // admin restaurada do storage do navegador. Sem esperar isso, um F5 pode
+        // tentar salvar no Firestore ANTES dessa restauração terminar — o SDK acha
+        // que ninguém está logado ainda, a regra de segurança rejeita a escrita, e
+        // parece que "salvou" (ficou local) mas nunca chega no servidor.
+        let authReadyPromise = null;
 
         // Los SDKs de Firebase se cargan con `defer`, así que se ejecutan DESPUÉS
         // de que este script inline es parseado. Por eso la inicialización se
@@ -2879,6 +2885,9 @@
                 firebaseApp = firebase.initializeApp(firebaseConfig);
                 firebaseStorage = firebase.storage();
                 firestoreDB = firebase.firestore();
+                authReadyPromise = new Promise((resolve) => {
+                    firebase.auth().onAuthStateChanged((user) => resolve(user));
+                });
                 console.log('🔥 Firebase Storage + Firestore conectados com sucesso!');
             } catch (e) {
                 console.warn('⚠️ Firebase não disponível:', e.message);
@@ -3199,6 +3208,7 @@
             let _savedToServer = false;
             if (firestoreDB) {
                 try {
+                    if (authReadyPromise) await authReadyPromise;
                     await firestoreDB.collection(storeName).doc(docId).set(dataToSave, { merge: true });
                     firestoreOnline = true;
                     _savedToServer = true;
@@ -3249,6 +3259,7 @@
             let _savedToServer = false;
             if (firestoreDB) {
                 try {
+                    if (authReadyPromise) await authReadyPromise;
                     await firestoreDB.collection(storeName).doc(docId).set(dataToSave);
                     firestoreOnline = true;
                     _savedToServer = true;
