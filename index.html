@@ -3192,14 +3192,20 @@
                 return dataToSave;
             }
 
-            // Sincroniza com Firestore em segundo plano
-            if (firestoreOnline && firestoreDB) {
+            // Sincroniza com Firestore. Tenta sempre que o SDK existe — não confia só na
+            // flag firestoreOnline (que vem de um ping único no carregamento da página e
+            // pode ficar desatualizada) — assim uma sessão que começou "offline" ainda
+            // consegue salvar de verdade assim que a rede/login estiverem prontos.
+            if (firestoreDB) {
                 try {
                     await firestoreDB.collection(storeName).doc(docId).set(dataToSave, { merge: true });
+                    firestoreOnline = true;
                 } catch(e) {
                     console.error(`❌ Falha ao salvar "${storeName}/${docId}" no Firestore (ficou só local):`, e.message);
-                    showNotification('⚠️ No se pudo guardar en el servidor. Verifica tu sesión de admin e intenta de nuevo.');
+                    showNotification(`⚠️ No se guardó en el servidor (${e.code || e.message}). Avisa a soporte con este mensaje.`);
                 }
+            } else {
+                showNotification('⚠️ Sin conexión con el servidor: se guardó solo en este dispositivo.');
             }
             return dataToSave;
         }
@@ -3234,14 +3240,17 @@
             if (idx >= 0) items[idx] = dataToSave; else items.push(dataToSave);
             lsSave(storeName, items);
 
-            // Sincroniza com Firestore
-            if (firestoreOnline && firestoreDB) {
+            // Sincroniza com Firestore. Tenta sempre que o SDK existe (ver comentário em dbPut).
+            if (firestoreDB) {
                 try {
                     await firestoreDB.collection(storeName).doc(docId).set(dataToSave);
+                    firestoreOnline = true;
                 } catch(e) {
                     console.error(`❌ Falha ao criar "${storeName}/${docId}" no Firestore (ficou só local):`, e.message);
-                    showNotification('⚠️ No se pudo guardar en el servidor. Verifica tu sesión de admin e intenta de nuevo.');
+                    showNotification(`⚠️ No se guardó en el servidor (${e.code || e.message}). Avisa a soporte con este mensaje.`);
                 }
+            } else {
+                showNotification('⚠️ Sin conexión con el servidor: se guardó solo en este dispositivo.');
             }
             return dataToSave;
         }
