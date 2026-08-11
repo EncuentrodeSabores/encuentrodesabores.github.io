@@ -2029,6 +2029,7 @@
             <a class="nav-link" data-section="inicio" data-es="Inicio" onclick="goToSection('inicio')">Inicio</a>
             <a class="nav-link" data-section="cardapio" data-es="Menú" onclick="goToSection('cardapio')">Menú</a>
             <a class="nav-link" data-section="bebidas" data-es="Bebidas" onclick="goToSection('bebidas')">Bebidas</a>
+            <a class="nav-link" data-section="postres" data-es="Postres" onclick="goToSection('postres')">Postres</a>
             <a class="nav-link" data-section="combos" data-es="Combos" onclick="goToSection('combos')">Combos</a>
             <a onclick="openCartPage()" data-es="Carrito">Carrito</a>
         </nav>
@@ -2156,8 +2157,26 @@
             </div>
         </section>
 
+        <!-- ===== POSTRES ===== -->
+        <section class="products-section" id="postres">
+            <div class="food-badge" style="top: 10px; right: 4%; width: 80px; height: 80px; transform: rotate(-6deg);">
+                <img src="assets/badge-chicken.jpg" alt="" aria-hidden="true" loading="lazy">
+            </div>
+            <div class="container">
+                <h2 class="section-title" data-es="🍰 Postres">
+                    🍰 Postres
+                </h2>
+                <div class="products-grid" id="postresGrid" role="list" aria-label="Postres">
+                    <!-- Postres serão carregados via JavaScript -->
+                    <div class="skeleton-card" aria-hidden="true"></div>
+                    <div class="skeleton-card" aria-hidden="true"></div>
+                    <div class="skeleton-card" aria-hidden="true"></div>
+                </div>
+            </div>
+        </section>
+
         <!-- ===== COMBOS ===== -->
-        <section class="products-section" id="combos">
+        <section class="products-section" id="combos" style="background: var(--light);">
             <div class="food-badge" style="top: 15px; left: 4%; width: 75px; height: 75px; transform: rotate(7deg);">
                 <img src="assets/badge-egg.jpg" alt="" aria-hidden="true" loading="lazy">
             </div>
@@ -2207,6 +2226,9 @@
                     </button>
                     <button class="btn btn-secondary" style="flex: 1;" onclick="goToSection('bebidas')">
                         🥤 <span data-es="Bebidas">Bebidas</span>
+                    </button>
+                    <button class="btn btn-secondary" style="flex: 1;" onclick="goToSection('postres')">
+                        🍰 <span data-es="Postres">Postres</span>
                     </button>
                     <button class="btn btn-secondary" style="flex: 1;" onclick="goToSection('combos')">
                         🎁 <span data-es="Combos">Combos</span>
@@ -2442,6 +2464,7 @@
                     <li><a onclick="goToSection('inicio')"><i class="fas fa-chevron-right"></i> <span data-es="Inicio">Inicio</span></a></li>
                     <li><a onclick="goToSection('cardapio')"><i class="fas fa-chevron-right"></i> <span data-es="Menú">Menú</span></a></li>
                     <li><a onclick="goToSection('bebidas')"><i class="fas fa-chevron-right"></i> <span data-es="Bebidas">Bebidas</span></a></li>
+                    <li><a onclick="goToSection('postres')"><i class="fas fa-chevron-right"></i> <span data-es="Postres">Postres</span></a></li>
                     <li><a onclick="goToSection('combos')"><i class="fas fa-chevron-right"></i> <span data-es="Combos">Combos</span></a></li>
                 </ul>
             </div>
@@ -2486,6 +2509,7 @@
         <a onclick="closeMobileMenu(); goToSection('inicio')" data-es="Inicio">🏠 Início</a>
         <a onclick="closeMobileMenu(); goToSection('cardapio')" data-es="Menú">🥗 Cardápio</a>
         <a onclick="closeMobileMenu(); goToSection('bebidas')" data-es="Bebidas">🥤 Bebidas</a>
+        <a onclick="closeMobileMenu(); goToSection('postres')" data-es="Postres">🍰 Postres</a>
         <a onclick="closeMobileMenu(); goToSection('combos')" data-es="Combos">🎁 Combos</a>
         <a onclick="closeMobileMenu(); openCartPage()" data-es="Carrito">🛒 Carrinho</a>
     </div>
@@ -2738,6 +2762,7 @@
                             <option value="pescado" data-es="Pescado">Pescado</option>
                             <option value="vegano" data-es="Vegano">Vegano</option>
                             <option value="bebida" data-es="Bebida">Bebida</option>
+                            <option value="postre" data-es="Postre">Postre</option>
                         </select>
                     </div>
                     
@@ -3720,18 +3745,23 @@
                 const allProducts = sortByOrder(await dbGetAll(STORES.PRODUCTS));
                 const container = document.getElementById('productsGrid');
                 const bebidasContainer = document.getElementById('bebidasGrid');
+                const postresContainer = document.getElementById('postresGrid');
 
                 if (!container) return;
 
                 const settings = await dbGet(STORES.SETTINGS, 'app_settings');
                 const currencySymbol = settings ? settings.currencySymbol : 'Bs';
 
-                const products = allProducts.filter(p => p.category !== 'bebida');
+                const products = allProducts.filter(p => p.category !== 'bebida' && p.category !== 'postre');
                 const bebidas = allProducts.filter(p => p.category === 'bebida');
+                const postres = allProducts.filter(p => p.category === 'postre');
 
                 container.innerHTML = products.map(p => productCardHtml(p, currencySymbol)).join('');
                 if (bebidasContainer) {
                     bebidasContainer.innerHTML = bebidas.map(p => productCardHtml(p, currencySymbol)).join('');
+                }
+                if (postresContainer) {
+                    postresContainer.innerHTML = postres.map(p => productCardHtml(p, currencySymbol)).join('');
                 }
 
                 updateAllLanguageElements();
@@ -4642,7 +4672,16 @@
         // posição (não faz sentido mover um prato pra cima/baixo "pulando" uma bebida).
         function productSubgroupKey(item) {
             if (item.type === 'combo') return 'combo';
-            return item.category === 'bebida' ? 'bebida' : 'product';
+            if (item.category === 'bebida') return 'bebida';
+            if (item.category === 'postre') return 'postre';
+            return 'product';
+        }
+
+        function productSubgroupEmoji(item) {
+            if (item.type === 'combo') return '🎁 ';
+            if (item.category === 'bebida') return '🥤 ';
+            if (item.category === 'postre') return '🍰 ';
+            return '🍽️ ';
         }
 
         async function loadProductList() {
@@ -4653,15 +4692,16 @@
                 const container = document.getElementById('adminProductList');
                 if (!container) return;
 
-                const foodItems = products.filter(p => p.category !== 'bebida');
+                const foodItems = products.filter(p => p.category !== 'bebida' && p.category !== 'postre');
                 const drinkItems = products.filter(p => p.category === 'bebida');
+                const dessertItems = products.filter(p => p.category === 'postre');
 
                 const renderGroup = (items, label) => !items.length ? '' : `
                     <div style="font-weight:700;margin:16px 0 8px;color:var(--dark);font-size:1.1rem;">${label}</div>
                     ${items.map((item, i) => `
                         <div class="product-item">
                             <div>
-                                <strong>${item.type === 'combo' ? '🎁 ' : (item.category === 'bebida' ? '🥤 ' : '🍽️ ')}${item.nameEs}</strong><br>
+                                <strong>${productSubgroupEmoji(item)}${item.nameEs}</strong><br>
                                 <small>${item.type === 'combo' ? 'COMBO' : 'PRODUTO'} - ${item.price ? 'Bs ' + item.price.toFixed(2) : ''}</small>
                             </div>
                             <div class="product-item-actions">
@@ -4676,6 +4716,7 @@
 
                 container.innerHTML = renderGroup(foodItems, '🍽️ Productos')
                     + renderGroup(drinkItems, '🥤 Bebidas')
+                    + renderGroup(dessertItems, '🍰 Postres')
                     + renderGroup(combos, '🎁 Combos');
             } catch (error) {
                 console.error('❌ Erro ao carregar lista de produtos:', error);
