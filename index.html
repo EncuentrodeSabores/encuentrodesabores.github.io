@@ -2143,8 +2143,8 @@
                     <span id="cartPageSubtotal">Bs 0,00</span>
                 </div>
                 <div class="summary-row">
-                    <span id="deliveryLabel" data-es="Entrega">Entrega</span>
-                    <span id="cartPageDelivery" data-es="Calcular via WhatsApp">Calcular via WhatsApp</span>
+                    <span id="deliveryLabel" data-es="Retiro">Retiro</span>
+                    <span id="cartPageDelivery" data-es="En el restaurante">En el restaurante</span>
                 </div>
                 <div class="summary-row summary-total">
                     <span data-es="Total">Total</span>
@@ -2188,32 +2188,30 @@
             <div class="qr-code-container">
                 <h3><i class="fas fa-qrcode"></i> <span data-es="Pagamento apenas com QR Code">Pagamento apenas con QR Code</span></h3>
                 
-                <div style="background: var(--light); padding: 20px; border-radius: var(--radius); margin: 20px 0; text-align: left;">
-                    <p style="color: var(--primary); font-weight: 600;">
-                        <i class="fas fa-info-circle"></i> 
-                        <span data-es="Reciba el código QR del valor total después de enviar su ubicación por WhatsApp.">
-                            Reciba el código QR del valor total después de enviar su ubicación por WhatsApp.
-                        </span>
+                <div style="background: #fff3cd; border: 1px solid #ffe08a; padding: 16px 20px; border-radius: var(--radius); margin: 20px 0; text-align: left;">
+                    <p style="color: #8a6d00; font-weight: 600; margin: 0 0 8px;">
+                        <i class="fas fa-triangle-exclamation"></i>
+                        <span data-es="El servicio de entrega aún no está disponible.">El servicio de entrega aún no está disponible.</span>
                     </p>
+                    <p style="color: #8a6d00; margin: 0 0 12px;">
+                        <span data-es="Puedes retirar tu pedido directamente en el restaurante.">Puedes retirar tu pedido directamente en el restaurante.</span>
+                    </p>
+                    <button type="button" class="btn btn-secondary" style="width: auto; padding: 8px 16px; font-size: 14px;" onclick="openStoreLocation()">
+                        <i class="fas fa-location-dot"></i> <span data-es="Ver ubicación en el mapa">Ver ubicación en el mapa</span>
+                    </button>
                 </div>
-                
-                <!-- Campo de endereço para entrega -->
+
+                <!-- Observações opcionais do pedido (antes era endereço obrigatório de entrega) -->
                 <div style="margin: 20px 0; text-align: left;">
                     <label for="deliveryLocation" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--dark);">
-                        <i class="fas fa-map-marker-alt"></i> 
-                        <span data-es="Localización para Entrega">Localización para Entrega</span>
+                        <i class="fas fa-comment"></i>
+                        <span data-es="Observaciones (opcional)">Observaciones (opcional)</span>
                     </label>
-                    <textarea id="deliveryLocation" 
-                              placeholder="Ingresa tu dirección completa (calle, número, barrio, ciudad)..."
-                              aria-describedby="deliveryLocationHelp"
-                              style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: var(--radius); min-height: 100px; resize: vertical;"></textarea>
-                    <small id="deliveryLocationHelp" style="color: var(--gray); display: block; margin-top: 5px;">
-                        <span data-es="Esta información se enviará por WhatsApp para calcular la entrega y enviarte el código QR para pago.">
-                            Esta información se enviará por WhatsApp para calcular la entrega y enviarte el código QR para pago.
-                        </span>
-                    </small>
+                    <textarea id="deliveryLocation"
+                              placeholder="Alguna observación sobre tu pedido..."
+                              style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: var(--radius); min-height: 80px; resize: vertical;"></textarea>
                 </div>
-                
+
                 <div class="pix-instructions">
                     <h4><i class="fas fa-credit-card"></i> <span data-es="Cómo pagar:">Cómo pagar:</span></h4>
                     <ol>
@@ -2838,7 +2836,7 @@
                 
                 <div class="form-group">
                     <label class="form-label" id="deliveryTextLabel" data-es="Texto de Entrega (para WhatsApp)">Texto de Entrega (para WhatsApp)</label>
-                    <input type="text" class="form-input" id="deliveryTextInput" placeholder="A combinar" value="Calcular via WhatsApp">
+                    <input type="text" class="form-input" id="deliveryTextInput" placeholder="A combinar" value="En el restaurante">
                     <small style="color: var(--gray); display: block; margin-top: 5px;">
                         <span data-es="Este texto aparecerá en el mensaje de WhatsApp para la entrega">
                             Este texto aparecerá en el mensaje de WhatsApp para la entrega
@@ -2850,8 +2848,8 @@
                     <label class="form-label" id="deliveryPriceLabel">Precio de Entrega (Bs)</label>
                     <input type="number" step="0.01" class="form-input" id="deliveryPriceInput" value="">
                     <small style="color: var(--gray); display: block; margin-top: 5px;">
-                        <span data-es="Dejar vacío para mostrar 'Calcular via WhatsApp'">
-                            Dejar vacío para mostrar 'Calcular via WhatsApp'
+                        <span data-es="Dejar vacío para mostrar 'En el restaurante'">
+                            Dejar vacío para mostrar 'En el restaurante'
                         </span>
                     </small>
                 </div>
@@ -3406,7 +3404,7 @@
                 whatsappNumber: '59177123456',
                 contactEmail: 'hola@encuentrodesabores.com',
                 deliveryPrice: null,
-                deliveryText: 'Calcular via WhatsApp',
+                deliveryText: 'En el restaurante',
                 currencySymbol: 'Bs',
                 heroImages: {
                     carne: 'assets/hero-plato-1.jpg',
@@ -4196,7 +4194,7 @@
             
             const currencySymbol = settings.currencySymbol || 'Bs';
             const deliveryPrice = settings.deliveryPrice || null;
-            const deliveryText = settings.deliveryText || 'Calcular via WhatsApp';
+            const deliveryText = settings.deliveryText || 'En el restaurante';
             
             if (cart.length === 0) {
                 container.innerHTML = `
@@ -4349,16 +4347,23 @@
             document.getElementById('clientsSection').style.display = 'none';
         }
 
+        // Link direto do Google Maps (compartilhado pelo dono) tem prioridade; sem ele,
+        // cai para uma busca pelo endereço de texto cadastrado em Información Tienda.
+        const STORE_MAPS_URL = '';
+        async function openStoreLocation() {
+            if (STORE_MAPS_URL) {
+                window.open(STORE_MAPS_URL, '_blank', 'noopener');
+                return;
+            }
+            const settings = await dbGet(STORES.SETTINGS, 'app_settings') || {};
+            const address = (settings.storeInfo && settings.storeInfo.address) || 'Santa Cruz de la Sierra, Bolivia';
+            window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address), '_blank', 'noopener');
+        }
+
         // ===== ENVIAR PEDIDO PARA WHATSAPP =====
         async function sendOrderToWhatsApp() {
             const deliveryLocation = document.getElementById('deliveryLocation');
-            if (!deliveryLocation || !deliveryLocation.value.trim()) {
-                showNotification(currentLanguage === 'es' 
-                    ? '⚠️ Por favor, ingresa tu dirección de entrega' 
-                    : '⚠️ Por favor, insira seu endereço de entrega');
-                return;
-            }
-            
+
             const sendOrderBtn = document.getElementById('sendOrderBtn');
             if (!sendOrderBtn) return;
             
@@ -4378,22 +4383,19 @@
                 if (currentLanguage === 'es') {
                     message = `*📍 NUEVO PEDIDO - ${settings.businessName || 'Encuentro de Sabores'}*\n\n`;
                     message += `*Cliente:* ${currentUser ? currentUser.name : 'Cliente nuevo'}\n`;
-                    message += `*Dirección para entrega:* ${deliveryLocation.value}\n\n`;
-                    message += `*📦 DETALLES DEL PEDIDO:*\n`;
-                    
+                    message += `*Retiro:* Directamente en el restaurante (entrega aún no disponible)\n`;
+                    if (deliveryLocation && deliveryLocation.value.trim()) {
+                        message += `*Observaciones:* ${deliveryLocation.value.trim()}\n`;
+                    }
+                    message += `\n*📦 DETALLES DEL PEDIDO:*\n`;
+
                     cart.forEach(item => {
                         message += `• ${item.quantity}x ${item.name} - ${settings.currencySymbol || 'Bs'} ${(item.price * item.quantity).toFixed(2)}\n`;
                     });
-                    
-                    message += `\n*Valor total del producto:* ${settings.currencySymbol || 'Bs'} ${subtotal.toFixed(2)}\n`;
-                    if (settings.deliveryPrice) {
-                        message += `*Entrega:* ${settings.currencySymbol || 'Bs'} ${settings.deliveryPrice.toFixed(2)}\n`;
-                    } else {
-                        message += `*Entrega:* ${settings.deliveryText || 'Calcular via WhatsApp'}\n`;
-                    }
-                    message += `*💰 VALOR TOTAL = ${settings.currencySymbol || 'Bs'} ${subtotal.toFixed(2)} + Frete a calcular*\n\n`;
+
+                    message += `\n*💰 VALOR TOTAL = ${settings.currencySymbol || 'Bs'} ${subtotal.toFixed(2)}*\n\n`;
                     message += `_Pedido realizado el ${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}_\n\n`;
-                    
+
                     message += '✅ *PROCEDIMIENTO PARA PAGO:*\n';
                     message += '1. Le enviaremos el código QR del valor total por WhatsApp\n';
                     message += '2. Abra su aplicación de pagos\n';
@@ -4401,24 +4403,21 @@
                     message += '4. Escanee el código QR enviado\n';
                     message += '5. Confirme el pago\n';
                     message += '6. Envíe el comprobante por WhatsApp\n';
-                    message += '7. ¡Listo! Solo espere que llegue su pedido 🚚\n';
+                    message += '7. ¡Listo! Retira tu pedido en el restaurante 🏠\n';
                 } else {
                     message = `*📍 NOVO PEDIDO - ${settings.businessName || 'Encuentro de Sabores'}*\n\n`;
                     message += `*Cliente:* ${currentUser ? currentUser.name : 'Cliente novo'}\n`;
-                    message += `*Endereço para entrega:* ${deliveryLocation.value}\n\n`;
-                    message += `*📦 DETALHES DO PEDIDO:*\n`;
-                    
+                    message += `*Retirada:* Diretamente no restaurante (entrega ainda não disponível)\n`;
+                    if (deliveryLocation && deliveryLocation.value.trim()) {
+                        message += `*Observações:* ${deliveryLocation.value.trim()}\n`;
+                    }
+                    message += `\n*📦 DETALHES DO PEDIDO:*\n`;
+
                     cart.forEach(item => {
                         message += `• ${item.quantity}x ${item.name} - ${settings.currencySymbol || 'R$'} ${(item.price * item.quantity).toFixed(2)}\n`;
                     });
-                    
-                    message += `\n*Valor total do produto:* ${settings.currencySymbol || 'R$'} ${subtotal.toFixed(2)}\n`;
-                    if (settings.deliveryPrice) {
-                        message += `*Entrega:* ${settings.currencySymbol || 'R$'} ${settings.deliveryPrice.toFixed(2)}\n`;
-                    } else {
-                        message += `*Entrega:* ${settings.deliveryText || 'Calcular via WhatsApp'}\n`;
-                    }
-                    message += `*💰 VALOR TOTAL = ${settings.currencySymbol || 'R$'} ${subtotal.toFixed(2)} + Frete a calcular*\n\n`;
+
+                    message += `\n*💰 VALOR TOTAL = ${settings.currencySymbol || 'R$'} ${subtotal.toFixed(2)}*\n\n`;
                     message += `_Pedido realizado em ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}_\n\n`;
                     
                     message += '✅ *PROCEDIMENTO PARA PAGAMENTO:*\n';
@@ -4428,7 +4427,7 @@
                     message += '4. Escaneie o código QR enviado\n';
                     message += '5. Confirme o pagamento\n';
                     message += '6. Envie o comprovante por WhatsApp\n';
-                    message += '7. Pronto! Só aguardar seu pedido chegar 🚚\n';
+                    message += '7. Pronto! Retire seu pedido no restaurante 🏠\n';
                 }
                 
                 const whatsappNumber = settings.whatsappNumber || '59177123456';
@@ -5153,7 +5152,7 @@
                     if (facebookInput) facebookInput.value = settings.storeInfo ? settings.storeInfo.facebook || '' : '';
                     if (tiktokInput) tiktokInput.value = settings.storeInfo ? settings.storeInfo.tiktok || '' : '';
                     if (addressInput) addressInput.value = settings.storeInfo ? settings.storeInfo.address || 'Santa Cruz de la Sierra, Bolivia' : 'Santa Cruz de la Sierra, Bolivia';
-                    if (deliveryTextInput) deliveryTextInput.value = settings.deliveryText || 'Calcular via WhatsApp';
+                    if (deliveryTextInput) deliveryTextInput.value = settings.deliveryText || 'En el restaurante';
                     if (deliveryPriceInput) deliveryPriceInput.value = settings.deliveryPrice || '';
                     
                     if (heroPhraseInput && settings.heroPhrase) {
