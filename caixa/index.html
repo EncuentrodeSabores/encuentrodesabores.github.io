@@ -554,17 +554,23 @@ async function stWrite(k,v){
     return false;
   }
 }
+/* Firebase Realtime Database no guarda arrays/objetos vacíos: un cliente sin
+   lançamentos pierde ese campo al ir y volver del servidor. Se normaliza acá
+   para que el resto del código pueda asumir que c.lancamentos siempre es array. */
+function normalizeClientes(arr){
+  return (arr||[]).map(c=>({...c,lancamentos:Array.isArray(c.lancamentos)?c.lancamentos:[]}));
+}
 async function syncFromStorage(){
   const [remoteOps,remoteNotas,remoteCli]=await Promise.all([stRead(KO),stRead(KN),stRead(KC)]);
   if(remoteOps)ops=remoteOps;
   if(remoteNotas)notas=remoteNotas;
-  if(remoteCli)clientes=remoteCli;
+  if(remoteCli)clientes=normalizeClientes(remoteCli);
 }
 const dataReadyPromise=(async function initData(){
   ops=await stRead(KO)||[];
   notas=await stRead(KN)||[];
   firstDay=await stRead(KFD)||'';
-  clientes=await stRead(KC)||[];
+  clientes=normalizeClientes(await stRead(KC));
   dataReady=true;
   const skel=document.getElementById('loginSkeleton');
   const cards=document.getElementById('userCards');
@@ -1043,7 +1049,7 @@ function renderNotas(){
 
 async function loadClientes(){
   const r=await stRead(KC);
-  if(r)clientes=r;
+  if(r)clientes=normalizeClientes(r);
 }
 
 async function switchCadTab(tab,btn){
