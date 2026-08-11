@@ -2007,6 +2007,7 @@
         <nav class="nav">
             <a class="nav-link" data-section="inicio" data-es="Inicio" onclick="goToSection('inicio')">Inicio</a>
             <a class="nav-link" data-section="cardapio" data-es="Menú" onclick="goToSection('cardapio')">Menú</a>
+            <a class="nav-link" data-section="bebidas" data-es="Bebidas" onclick="goToSection('bebidas')">Bebidas</a>
             <a class="nav-link" data-section="combos" data-es="Combos" onclick="goToSection('combos')">Combos</a>
             <a onclick="openCartPage()" data-es="Carrito">Carrito</a>
         </nav>
@@ -2110,8 +2111,26 @@
             </div>
         </section>
 
+        <!-- ===== BEBIDAS ===== -->
+        <section class="products-section" id="bebidas" style="background: var(--light);">
+            <div class="food-badge" style="top: 15px; left: 4%; width: 75px; height: 75px; transform: rotate(7deg);">
+                <img src="assets/badge-egg.jpg" alt="" aria-hidden="true" loading="lazy">
+            </div>
+            <div class="container">
+                <h2 class="section-title" data-es="🥤 Bebidas">
+                    🥤 Bebidas
+                </h2>
+                <div class="products-grid" id="bebidasGrid" role="list" aria-label="Bebidas">
+                    <!-- Bebidas serão carregadas via JavaScript -->
+                    <div class="skeleton-card" aria-hidden="true"></div>
+                    <div class="skeleton-card" aria-hidden="true"></div>
+                    <div class="skeleton-card" aria-hidden="true"></div>
+                </div>
+            </div>
+        </section>
+
         <!-- ===== COMBOS ===== -->
-        <section class="products-section" id="combos" style="background: var(--light);">
+        <section class="products-section" id="combos">
             <div class="food-badge" style="top: 15px; left: 4%; width: 75px; height: 75px; transform: rotate(7deg);">
                 <img src="assets/badge-egg.jpg" alt="" aria-hidden="true" loading="lazy">
             </div>
@@ -2158,6 +2177,9 @@
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                     <button class="btn btn-secondary" style="flex: 1;" onclick="goToSection('cardapio')">
                         🍽️ <span data-es="Menú">Menú</span>
+                    </button>
+                    <button class="btn btn-secondary" style="flex: 1;" onclick="goToSection('bebidas')">
+                        🥤 <span data-es="Bebidas">Bebidas</span>
                     </button>
                     <button class="btn btn-secondary" style="flex: 1;" onclick="goToSection('combos')">
                         🎁 <span data-es="Combos">Combos</span>
@@ -2392,6 +2414,7 @@
                 <ul class="footer-links">
                     <li><a onclick="goToSection('inicio')"><i class="fas fa-chevron-right"></i> <span data-es="Inicio">Inicio</span></a></li>
                     <li><a onclick="goToSection('cardapio')"><i class="fas fa-chevron-right"></i> <span data-es="Menú">Menú</span></a></li>
+                    <li><a onclick="goToSection('bebidas')"><i class="fas fa-chevron-right"></i> <span data-es="Bebidas">Bebidas</span></a></li>
                     <li><a onclick="goToSection('combos')"><i class="fas fa-chevron-right"></i> <span data-es="Combos">Combos</span></a></li>
                 </ul>
             </div>
@@ -2435,6 +2458,7 @@
         <button class="mobile-nav-close" onclick="closeMobileMenu()">&times;</button>
         <a onclick="closeMobileMenu(); goToSection('inicio')" data-es="Inicio">🏠 Início</a>
         <a onclick="closeMobileMenu(); goToSection('cardapio')" data-es="Menú">🥗 Cardápio</a>
+        <a onclick="closeMobileMenu(); goToSection('bebidas')" data-es="Bebidas">🥤 Bebidas</a>
         <a onclick="closeMobileMenu(); goToSection('combos')" data-es="Combos">🎁 Combos</a>
         <a onclick="closeMobileMenu(); openCartPage()" data-es="Carrito">🛒 Carrinho</a>
     </div>
@@ -2686,6 +2710,7 @@
                             <option value="pollo" data-es="Pollo">Pollo</option>
                             <option value="pescado" data-es="Pescado">Pescado</option>
                             <option value="vegano" data-es="Vegano">Vegano</option>
+                            <option value="bebida" data-es="Bebida">Bebida</option>
                         </select>
                     </div>
                     
@@ -3621,17 +3646,8 @@
             return items;
         }
 
-        async function renderProducts() {
-            try {
-                const products = sortByOrder(await dbGetAll(STORES.PRODUCTS));
-                const container = document.getElementById('productsGrid');
-                
-                if (!container) return;
-                
-                const settings = await dbGet(STORES.SETTINGS, 'app_settings');
-                const currencySymbol = settings ? settings.currencySymbol : 'Bs';
-                
-                container.innerHTML = products.map(product => `
+        function productCardHtml(product, currencySymbol) {
+            return `
                     <div class="product-card" role="listitem">
                         <div class="product-image">
                             <img src="${product.thumbUrl || product.imageUrl}"
@@ -3643,7 +3659,7 @@
                         <div class="product-info">
                             <h3 class="product-title">${product.nameEs}</h3>
                             <p class="product-description">${product.descriptionEs}</p>
-                            
+
                             ${product.calories ? `
                                 <div class="product-macros">
                                     <div class="macro">
@@ -3660,7 +3676,7 @@
                                     </div>
                                 </div>
                             ` : ''}
-                            
+
                             <div class="product-footer">
                                 <div class="product-price">${currencySymbol} ${product.price.toFixed(2)}</div>
                                 <button class="add-to-cart" aria-label="Agregar ${product.nameEs.replace(/"/g, '&quot;')} al carrito" onclick="addToCart(${product.id}, '${product.nameEs.replace(/'/g, "\\'")}', ${product.price}, 'product', '${product.imageUrl.replace(/'/g, "\\'")}')">
@@ -3669,10 +3685,30 @@
                             </div>
                         </div>
                     </div>
-                `).join('');
-                
+                `;
+        }
+
+        async function renderProducts() {
+            try {
+                const allProducts = sortByOrder(await dbGetAll(STORES.PRODUCTS));
+                const container = document.getElementById('productsGrid');
+                const bebidasContainer = document.getElementById('bebidasGrid');
+
+                if (!container) return;
+
+                const settings = await dbGet(STORES.SETTINGS, 'app_settings');
+                const currencySymbol = settings ? settings.currencySymbol : 'Bs';
+
+                const products = allProducts.filter(p => p.category !== 'bebida');
+                const bebidas = allProducts.filter(p => p.category === 'bebida');
+
+                container.innerHTML = products.map(p => productCardHtml(p, currencySymbol)).join('');
+                if (bebidasContainer) {
+                    bebidasContainer.innerHTML = bebidas.map(p => productCardHtml(p, currencySymbol)).join('');
+                }
+
                 updateAllLanguageElements();
-                injectProductJsonLd(products);
+                injectProductJsonLd(allProducts);
             } catch (error) {
                 console.error('❌ Erro ao renderizar produtos:', error);
             }
@@ -4573,6 +4609,15 @@
             await loadSettings();
         }
 
+        // Bebidas são "product" na mesma coleção do Firestore, só se diferenciam pela
+        // category === 'bebida'. Essa chave decide o subgrupo usado tanto pra exibir a
+        // lista do admin separada quanto pra saber com quem cada item pode trocar de
+        // posição (não faz sentido mover um prato pra cima/baixo "pulando" uma bebida).
+        function productSubgroupKey(item) {
+            if (item.type === 'combo') return 'combo';
+            return item.category === 'bebida' ? 'bebida' : 'product';
+        }
+
         async function loadProductList() {
             try {
                 const products = await ensureOrderField(STORES.PRODUCTS);
@@ -4581,12 +4626,15 @@
                 const container = document.getElementById('adminProductList');
                 if (!container) return;
 
+                const foodItems = products.filter(p => p.category !== 'bebida');
+                const drinkItems = products.filter(p => p.category === 'bebida');
+
                 const renderGroup = (items, label) => !items.length ? '' : `
                     <div style="font-weight:700;margin:16px 0 8px;color:var(--dark);font-size:1.1rem;">${label}</div>
                     ${items.map((item, i) => `
                         <div class="product-item">
                             <div>
-                                <strong>${item.type === 'combo' ? '🎁 ' : '🍽️ '}${item.nameEs}</strong><br>
+                                <strong>${item.type === 'combo' ? '🎁 ' : (item.category === 'bebida' ? '🥤 ' : '🍽️ ')}${item.nameEs}</strong><br>
                                 <small>${item.type === 'combo' ? 'COMBO' : 'PRODUTO'} - ${item.price ? 'Bs ' + item.price.toFixed(2) : ''}</small>
                             </div>
                             <div class="product-item-actions">
@@ -4599,7 +4647,9 @@
                     `).join('')}
                 `;
 
-                container.innerHTML = renderGroup(products, '🍽️ Productos') + renderGroup(combos, '🎁 Combos');
+                container.innerHTML = renderGroup(foodItems, '🍽️ Productos')
+                    + renderGroup(drinkItems, '🥤 Bebidas')
+                    + renderGroup(combos, '🎁 Combos');
             } catch (error) {
                 console.error('❌ Erro ao carregar lista de produtos:', error);
             }
@@ -4607,12 +4657,19 @@
 
         async function moveProduct(id, type, direction) {
             const storeName = type === 'product' ? STORES.PRODUCTS : STORES.COMBOS;
-            const items = await ensureOrderField(storeName);
-            const idx = items.findIndex(i => String(i.id) === String(id));
-            const swapIdx = idx + direction;
-            if (idx === -1 || swapIdx < 0 || swapIdx >= items.length) return;
+            const allItems = await ensureOrderField(storeName);
+            const item = allItems.find(i => String(i.id) === String(id));
+            if (!item) return;
 
-            const a = items[idx], b = items[swapIdx];
+            // Só troca com o vizinho do mesmo subgrupo (comida com comida, bebida com
+            // bebida) — os dois compartilham o mesmo campo "order" da coleção inteira,
+            // então itens de outro subgrupo podem estar entre eles nesse array.
+            const group = allItems.filter(i => productSubgroupKey(i) === productSubgroupKey(item));
+            const idx = group.findIndex(i => String(i.id) === String(id));
+            const swapIdx = idx + direction;
+            if (idx === -1 || swapIdx < 0 || swapIdx >= group.length) return;
+
+            const a = group[idx], b = group[swapIdx];
             const tmp = a.order; a.order = b.order; b.order = tmp;
             await dbPut(storeName, a);
             await dbPut(storeName, b);
