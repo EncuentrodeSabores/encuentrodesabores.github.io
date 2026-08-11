@@ -208,8 +208,8 @@ textarea{resize:none}
 .pagar-total{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:0.5px solid var(--border);margin-top:6px}
 .pagar-label{font-size:13px;color:var(--text-muted)}
 .pagar-val{font-size:16px;font-weight:500;color:var(--text-danger)}
-.confirm-popup{position:fixed;inset:0;background:rgba(0,0,0,0);display:flex;align-items:flex-end;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .22s ease,background .22s ease}
-.confirm-popup.show{opacity:1;pointer-events:auto;background:rgba(0,0,0,.45)}
+.confirm-popup{position:fixed;inset:0;background:rgba(0,0,0,0);display:flex;align-items:flex-end;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .22s ease,background .22s ease;visibility:hidden}
+.confirm-popup.show{opacity:1;pointer-events:auto;background:rgba(0,0,0,.45);visibility:visible}
 .confirm-box{background:var(--surface-2);border-radius:16px 16px 0 0;padding:24px 20px;width:100%;max-width:420px;transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
 .confirm-popup.show .confirm-box{transform:translateY(0)}
 .confirm-title{font-size:16px;font-weight:500;margin-bottom:8px}
@@ -491,13 +491,24 @@ textarea{resize:none}
 </div><!-- /main -->
 
 <!-- CONFIRM POPUP -->
-<div class="confirm-popup" id="confirmPopup" style="display:none">
+<div class="confirm-popup" id="confirmPopup">
   <div class="confirm-box">
     <div class="confirm-title" id="cfTitle"></div>
     <div class="confirm-body" id="cfBody"></div>
     <div class="confirm-row">
       <button class="btn" onclick="cfCancel()">Cancelar</button>
       <button class="btn pri" id="cfOk">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-popup" id="inputPopup">
+  <div class="confirm-box">
+    <div class="confirm-title" id="ipTitle"></div>
+    <input type="text" id="ipInput" style="margin:8px 0 16px;width:100%" placeholder="">
+    <div class="confirm-row">
+      <button class="btn" onclick="ipCancel()">Cancelar</button>
+      <button class="btn pri" onclick="ipOk()">Adicionar</button>
     </div>
   </div>
 </div>
@@ -556,21 +567,21 @@ async function stRead(k){
     const doc=await firestoreDB.collection(CAJA_COLLECTION).doc(k).get();
     return doc.exists ? doc.data().value : null;
   }catch(e){
-    console.error('Error leyendo del registro compartido:',e);
+    console.warn('Erro ao ler do Firestore:',e.code||e.message);
     return null;
   }
 }
 async function stWrite(k,v){
   if(!firebaseConfigured()){
-    showToast('Falta configurar la conexión con el registro compartido. Avisa a quien armó el sistema.','err');
+    showToast('Firebase não configurado. Avisa Diego.','err');
     return false;
   }
   try{
     await firestoreDB.collection(CAJA_COLLECTION).doc(k).set({value:v});
     return true;
   }catch(e){
-    console.error('Error guardando en el registro compartido:',e);
-    showToast('No se pudo guardar. Verifica tu conexión a internet e inténtalo de nuevo.','err');
+    console.error('Firestore rejeitou escrita:',e.code||e.message);
+    showToast('Erro ao salvar ('+(e.code||'sem conexão')+'). Verifique conexão ou avise Diego.','err');
     return false;
   }
 }
@@ -832,6 +843,31 @@ function confirm2(title,body){
 }
 function cfCancel(){cfClose();cfResolve&&cfResolve(false);}
 function cfClose(){document.getElementById('confirmPopup').classList.remove('show');}
+
+let ipResolve=null;
+function inputPrompt(title,placeholder){
+  return new Promise(res=>{
+    ipResolve=res;
+    document.getElementById('ipTitle').textContent=title;
+    const inp=document.getElementById('ipInput');
+    inp.value='';
+    inp.placeholder=placeholder||'';
+    document.getElementById('inputPopup').classList.add('show');
+    setTimeout(()=>inp.focus(),320);
+    inp.onkeydown=e=>{if(e.key==='Enter')ipOk();};
+  });
+}
+function ipOk(){
+  const val=document.getElementById('ipInput').value.trim();
+  document.getElementById('inputPopup').classList.remove('show');
+  ipResolve&&ipResolve(val||null);
+  ipResolve=null;
+}
+function ipCancel(){
+  document.getElementById('inputPopup').classList.remove('show');
+  ipResolve&&ipResolve(null);
+  ipResolve=null;
+}
 
 /* ===== TOAST: feedback animado, no bloqueante, sustituye alert() ===== */
 function toastWrap(){
@@ -1095,12 +1131,13 @@ function switchCadTab(tab,btn){
   if(tab==='clientes'){renderClientes();}
 }
 
-function abrirNovoCliente(){
-  const nome=prompt('Nome do cliente:');
-  if(!nome||!nome.trim())return;
+async function abrirNovoCliente(){
+  const nome=await inputPrompt('Novo cliente','Nome do cliente...');
+  if(!nome)return;
   const novo={id:Date.now(),nome:nome.trim(),lancamentos:[]};
   clientes.unshift(novo);
-  stWrite(KC,clientes);
+  const saved=await stWrite(KC,clientes);
+  if(!saved){clientes.shift();showToast('Erro ao salvar. Tente novamente.','err');return;}
   renderClientes();
   showToast('Cliente adicionado!','ok');
 }
