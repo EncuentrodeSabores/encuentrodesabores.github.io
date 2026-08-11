@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Encuentros de Sabores — Caja</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css">
+<script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -488,7 +490,7 @@ textarea{resize:none}
     <input type="text" id="ipInput" style="margin:8px 0 16px;width:100%" placeholder="">
     <div class="confirm-row">
       <button class="btn" onclick="ipCancel()">Cancelar</button>
-      <button class="btn pri" onclick="ipOk()">Adicionar</button>
+      <button class="btn pri" id="ipOkBtn" onclick="ipOk()">Adicionar</button>
     </div>
   </div>
 </div>
@@ -497,6 +499,18 @@ textarea{resize:none}
 
 <script>
 const KO='caja_ops', KN='caja_notas2', KFD='caja_first', KC='cad_clientes', USERS={g:'Gladyz',e:'Elena',d:'Diego'};
+/* Firebase Authentication: cada dono tem una cuenta fija (email inventado,
+   no recibe correos) para que el acceso al caderno exija contraseña. */
+const firebaseConfig = {
+  apiKey: "AIzaSyBEEm_8OVO-5R9GAtYVZ_Tm7TLzLIoXC3I",
+  authDomain: "encuentro-de-sabores.firebaseapp.com",
+  databaseURL: "https://encuentro-de-sabores-default-rtdb.firebaseio.com",
+  projectId: "encuentro-de-sabores",
+  storageBucket: "encuentro-de-sabores.firebasestorage.app",
+  messagingSenderId: "64432706902",
+  appId: "1:64432706902:web:e46d179a7cf0ed6fa7b2f7"
+};
+const USER_EMAILS = {g:'gladyz@encuentrodesabores.com', e:'elena@encuentrodesabores.com', d:'diego@encuentrodesabores.com'};
 let me='', meAv='';
 let ops=[];
 let notas=[];
@@ -611,6 +625,24 @@ function getSaldoAt(idx){
 }
 
 async function login(name,av){
+  const email=USER_EMAILS[av];
+  if(typeof firebase==='undefined'||!firebase.auth){
+    showToast('Firebase no está disponible ahora mismo. Verifica tu conexión.','err');
+    return;
+  }
+  const senha=await inputPrompt('Entrar como '+name,'Contraseña','password','Entrar');
+  if(!senha)return;
+  try{
+    await firebase.auth().signInWithEmailAndPassword(email,senha);
+  }catch(e){
+    showToast('Contraseña incorrecta.','err');
+    return;
+  }
+  await enterApp(name,av);
+}
+
+async function enterApp(name,av){
+  if(me)return;
   if(!dataReady){
     const ln=document.getElementById('loadingNote');
     if(ln){ln.textContent='⏳ Cargando datos compartidos, un momento...';ln.style.display='block';}
@@ -626,7 +658,27 @@ async function login(name,av){
   refreshAll();
 }
 
-function logout(){me='';meAv='';document.getElementById('s-main').classList.remove('on');document.getElementById('s-login').classList.add('on');}
+function logout(){
+  me='';meAv='';
+  document.getElementById('s-main').classList.remove('on');
+  document.getElementById('s-login').classList.add('on');
+  if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().signOut().catch(()=>{});
+}
+
+function initFirebaseApp(){
+  try{
+    firebase.initializeApp(firebaseConfig);
+    firebase.auth().onAuthStateChanged(function(user){
+      if(user&&!me){
+        const entry=Object.entries(USER_EMAILS).find(([av,email])=>email===user.email);
+        if(entry)enterApp(USERS[entry[0]],entry[0]);
+      }
+    });
+  }catch(e){
+    console.warn('Firebase no disponible:',e.message);
+  }
+}
+document.addEventListener('DOMContentLoaded', initFirebaseApp);
 
 /* ===== SKELETON: placeholders animados mientras se sincroniza con Firebase ===== */
 function skelRow(){
@@ -775,13 +827,16 @@ function cfCancel(){cfClose();cfResolve&&cfResolve(false);}
 function cfClose(){document.getElementById('confirmPopup').classList.remove('show');}
 
 let ipResolve=null;
-function inputPrompt(title,placeholder){
+function inputPrompt(title,placeholder,type,okLabel){
   return new Promise(res=>{
     ipResolve=res;
     document.getElementById('ipTitle').textContent=title;
     const inp=document.getElementById('ipInput');
     inp.value='';
+    inp.type=type||'text';
+    inp.autocomplete=type==='password'?'current-password':'off';
     inp.placeholder=placeholder||'';
+    document.getElementById('ipOkBtn').textContent=okLabel||'Adicionar';
     document.getElementById('inputPopup').classList.add('show');
     setTimeout(()=>inp.focus(),320);
     inp.onkeydown=e=>{if(e.key==='Enter')ipOk();};
