@@ -3598,9 +3598,34 @@
         }
 
         // ===== RENDERIZAÇÃO DE PRODUTOS =====
+        // Itens sem "order" ainda (nunca reordenados pelo admin) caem no final, ordenados
+        // pelo id — não escreve nada, só decide a ordem de exibição desta renderização.
+        function sortByOrder(items) {
+            return items.slice().sort((a, b) => {
+                const oa = typeof a.order === 'number' ? a.order : a.id;
+                const ob = typeof b.order === 'number' ? b.order : b.id;
+                return oa - ob;
+            });
+        }
+
+        // Garante que todo item da loja tenha um campo "order" sequencial (0,1,2,...),
+        // preservando a ordem atual (por order existente, ou por id se nunca reordenado).
+        // Só grava no Firestore os itens cujo order mudou. Usado no painel admin, nunca
+        // na página pública, pra não gerar escrita a cada visita de cliente.
+        async function ensureOrderField(storeName) {
+            const items = sortByOrder(await dbGetAll(storeName));
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].order !== i) {
+                    items[i].order = i;
+                    await dbPut(storeName, items[i]);
+                }
+            }
+            return items;
+        }
+
         async function renderProducts() {
             try {
-                const products = await dbGetAll(STORES.PRODUCTS);
+                const products = sortByOrder(await dbGetAll(STORES.PRODUCTS));
                 const container = document.getElementById('productsGrid');
                 
                 if (!container) return;
@@ -3684,7 +3709,7 @@
 
         async function renderCombos() {
             try {
-                const combos = await dbGetAll(STORES.COMBOS);
+                const combos = sortByOrder(await dbGetAll(STORES.COMBOS));
                 const container = document.getElementById('combosGrid');
                 
                 if (!container) return;
@@ -4551,28 +4576,50 @@
 
         async function loadProductList() {
             try {
-                const products = await dbGetAll(STORES.PRODUCTS);
-                const combos = await dbGetAll(STORES.COMBOS);
-                const allItems = [...products, ...combos];
-                
+                const products = await ensureOrderField(STORES.PRODUCTS);
+                const combos = await ensureOrderField(STORES.COMBOS);
+
                 const container = document.getElementById('adminProductList');
                 if (!container) return;
-                
-                container.innerHTML = allItems.map(item => `
-                    <div class="product-item">
-                        <div>
-                            <strong>${item.type === 'combo' ? '🎁 ' : '🍽️ '}${item.nameEs}</strong><br>
-                            <small>${item.type === 'combo' ? 'COMBO' : 'PRODUTO'} - ${item.price ? 'Bs ' + item.price.toFixed(2) : ''}</small>
+
+                const renderGroup = (items, label) => !items.length ? '' : `
+                    <div style="font-weight:700;margin:16px 0 8px;color:var(--dark);font-size:1.1rem;">${label}</div>
+                    ${items.map((item, i) => `
+                        <div class="product-item">
+                            <div>
+                                <strong>${item.type === 'combo' ? '🎁 ' : '🍽️ '}${item.nameEs}</strong><br>
+                                <small>${item.type === 'combo' ? 'COMBO' : 'PRODUTO'} - ${item.price ? 'Bs ' + item.price.toFixed(2) : ''}</small>
+                            </div>
+                            <div class="product-item-actions">
+                                <button class="btn-edit" onclick="moveProduct(${item.id}, '${item.type}', -1)" ${i === 0 ? 'disabled' : ''} title="Mover para cima" aria-label="Mover para cima">⬆️</button>
+                                <button class="btn-edit" onclick="moveProduct(${item.id}, '${item.type}', 1)" ${i === items.length - 1 ? 'disabled' : ''} title="Mover para baixo" aria-label="Mover para baixo">⬇️</button>
+                                <button class="btn-edit" onclick="editProduct(${item.id}, '${item.type}')">✏️ ${currentLanguage === 'es' ? 'Editar' : 'Editar'}</button>
+                                <button class="btn-delete" onclick="deleteProduct(${item.id}, '${item.type}')">🗑️ ${currentLanguage === 'es' ? 'Eliminar' : 'Excluir'}</button>
+                            </div>
                         </div>
-                        <div class="product-item-actions">
-                            <button class="btn-edit" onclick="editProduct(${item.id}, '${item.type}')">✏️ ${currentLanguage === 'es' ? 'Editar' : 'Editar'}</button>
-                            <button class="btn-delete" onclick="deleteProduct(${item.id}, '${item.type}')">🗑️ ${currentLanguage === 'es' ? 'Eliminar' : 'Excluir'}</button>
-                        </div>
-                    </div>
-                `).join('');
+                    `).join('')}
+                `;
+
+                container.innerHTML = renderGroup(products, '🍽️ Productos') + renderGroup(combos, '🎁 Combos');
             } catch (error) {
                 console.error('❌ Erro ao carregar lista de produtos:', error);
             }
+        }
+
+        async function moveProduct(id, type, direction) {
+            const storeName = type === 'product' ? STORES.PRODUCTS : STORES.COMBOS;
+            const items = await ensureOrderField(storeName);
+            const idx = items.findIndex(i => String(i.id) === String(id));
+            const swapIdx = idx + direction;
+            if (idx === -1 || swapIdx < 0 || swapIdx >= items.length) return;
+
+            const a = items[idx], b = items[swapIdx];
+            const tmp = a.order; a.order = b.order; b.order = tmp;
+            await dbPut(storeName, a);
+            await dbPut(storeName, b);
+
+            await loadProductList();
+            if (type === 'product') await renderProducts(); else await renderCombos();
         }
 
         async function loadAdminClients() {
