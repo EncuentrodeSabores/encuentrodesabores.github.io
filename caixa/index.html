@@ -1046,18 +1046,22 @@ async function loadClientes(){
   if(r)clientes=r;
 }
 
-function switchCadTab(tab,btn){
+async function switchCadTab(tab,btn){
   document.querySelectorAll('.cad-tab').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
   document.getElementById('sub-notas').style.display=tab==='notas'?'block':'none';
   document.getElementById('sub-clientes').style.display=tab==='clientes'?'block':'none';
   document.getElementById('sub-cliente-detalhe').style.display='none';
-  if(tab==='clientes'){renderClientes();}
+  if(tab==='clientes'){
+    await loadClientes();
+    renderClientes();
+  }
 }
 
 async function abrirNovoCliente(){
   const nome=await inputPrompt('Novo cliente','Nome do cliente...');
   if(!nome)return;
+  await loadClientes();
   const novo={id:Date.now(),nome:nome.trim(),lancamentos:[]};
   clientes.unshift(novo);
   const saved=await stWrite(KC,clientes);
@@ -1098,7 +1102,8 @@ function renderClientes(){
   }).join('');
 }
 
-function abrirCliente(id){
+async function abrirCliente(id){
+  await loadClientes();
   clienteAtualId=id;
   itensCompra=[];
   const c=clientes.find(x=>x.id===id);
@@ -1185,6 +1190,7 @@ function renderItens(){
 }
 
 async function salvarLancamento(btn){
+  await loadClientes();
   const c=clientes.find(x=>x.id===clienteAtualId);
   if(!c)return;
   const tipo=document.getElementById('lancTipo').value;
