@@ -774,6 +774,24 @@
             }
         }
 
+        /* Figurinhas com fotos reais dos produtos, flutuando ao redor do logo.
+           --rot mantém a inclinação de cada uma enquanto o keyframe só sobe/desce,
+           e o delay de cada uma é diferente pra não "boiarem" todas juntas. */
+        @keyframes heroFloatBob {
+            0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+            50% { transform: translateY(-14px) rotate(var(--rot, 0deg)); }
+        }
+
+        .hero-float-badge {
+            animation: heroFloatBob 3.6s ease-in-out infinite;
+        }
+
+        @media (max-width: 1100px) {
+            .hero-float-badge {
+                display: none;
+            }
+        }
+
         /* Figurinhas decorativas: recortes redondos das fotos do logo,
            espalhados como acentos "colados" pela tela. */
         .food-badge {
@@ -2063,6 +2081,7 @@
                 <div class="food-badge hero-logo-badge right" style="width: 90px; height: 90px; transform: translateY(-50%) rotate(8deg);">
                     <img src="assets/badge-herb.jpg" alt="" aria-hidden="true" loading="lazy">
                 </div>
+                <div id="heroFloatBadges"></div>
             </div>
             <div class="hero-content">
                 <div class="hero-text">
@@ -3764,11 +3783,40 @@
                     postresContainer.innerHTML = postres.map(p => productCardHtml(p, currencySymbol)).join('');
                 }
 
+                renderHeroFloatBadges(allProducts);
+
                 updateAllLanguageElements();
                 injectProductJsonLd(allProducts);
             } catch (error) {
                 console.error('❌ Erro ao renderizar produtos:', error);
             }
+        }
+
+        // Posições fixas (relativas ao logo) das figurinhas flutuantes da home. Cada
+        // uma pega a foto de um produto real, na ordem em que já aparecem no site.
+        const HERO_FLOAT_POSITIONS = [
+            { style: 'top:-6%; left:-130px;', size: 78, rot: -10, delay: 0 },
+            { style: 'top:38%; left:-190px;', size: 70, rot: 6, delay: 0.6 },
+            { style: 'top:82%; left:-140px;', size: 74, rot: -6, delay: 1.2 },
+            { style: 'top:2%; right:-120px;', size: 76, rot: 9, delay: 0.3 },
+            { style: 'top:6%; right:-230px;', size: 68, rot: -8, delay: 0.9 },
+            { style: 'top:78%; right:-190px;', size: 78, rot: 7, delay: 1.5 }
+        ];
+
+        function renderHeroFloatBadges(allProducts) {
+            const container = document.getElementById('heroFloatBadges');
+            if (!container) return;
+
+            const withImages = allProducts.filter(p => p.thumbUrl || p.imageUrl);
+            const chosen = withImages.slice(0, HERO_FLOAT_POSITIONS.length);
+
+            container.innerHTML = chosen.map((p, i) => {
+                const pos = HERO_FLOAT_POSITIONS[i];
+                const img = p.thumbUrl || p.imageUrl;
+                return `<div class="food-badge hero-float-badge" style="${pos.style} width:${pos.size}px; height:${pos.size}px; --rot:${pos.rot}deg; animation-delay:${pos.delay}s;">
+                    <img src="${img}" alt="${p.nameEs || ''}" loading="lazy">
+                </div>`;
+            }).join('');
         }
 
         // Genera/actualiza el JSON-LD de tipo Product para SEO, uno por producto visible.
