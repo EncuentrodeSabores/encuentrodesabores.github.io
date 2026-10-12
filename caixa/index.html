@@ -415,7 +415,7 @@ textarea{resize:none}
     <!-- SUB-TELA: CADERNO DE CLIENTES (lista) -->
     <div id="sub-clientes" style="display:none">
       <div class="section-pad" style="padding-top:0">
-        <button class="btn blue" onclick="abrirNovoCliente()" style="margin-bottom:12px"><i class="ti ti-user-plus" aria-hidden="true"></i> Adicionar cliente</button>
+        <button class="btn blue" onclick="abrirNovoCliente()" style="margin-bottom:12px"><i class="ti ti-user-plus" aria-hidden="true"></i> Agregar cliente</button>
         <div id="clientesList"></div>
       </div>
     </div>
@@ -423,16 +423,16 @@ textarea{resize:none}
     <!-- SUB-TELA: DETALHE DO CLIENTE -->
     <div id="sub-cliente-detalhe" style="display:none">
       <div class="detalle-header">
-        <button class="detalle-back" onclick="voltarClientes()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Voltar</button>
+        <button class="detalle-back" onclick="voltarClientes()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Volver</button>
         <span class="detalle-nome" id="detalheNome"></span>
       </div>
       <div class="detalle-saldo-box">
         <div>
-          <div class="detalle-saldo-label">Saldo devedor</div>
+          <div class="detalle-saldo-label">Saldo deudor</div>
           <div class="detalle-saldo-val" id="detalheSaldo">Bs 0.00</div>
         </div>
         <div style="text-align:right">
-          <div class="detalle-saldo-label">Lançamentos</div>
+          <div class="detalle-saldo-label">Movimientos</div>
           <div style="font-size:22px;font-weight:500" id="detalheQtd">0</div>
         </div>
       </div>
@@ -442,26 +442,26 @@ textarea{resize:none}
           <label>Tipo</label>
           <select id="lancTipo" onchange="onLancTipoChange()">
             <option value="compra">🛒 Compra / Consumo</option>
-            <option value="pagamento">✅ Pagamento recebido</option>
+            <option value="pagamento">✅ Pago recibido</option>
           </select>
           <div id="lancCamposCompra">
-            <label>Itens (adicione linha a linha)</label>
+            <label>Ítems (agregue línea por línea)</label>
             <div id="itensList" style="margin-bottom:6px"></div>
             <div class="calc-row">
-              <input type="text" id="itemDesc" placeholder="Descrição do item..." class="calc-input">
+              <input type="text" id="itemDesc" placeholder="Descripción del ítem..." class="calc-input">
               <input type="number" id="itemVal" placeholder="Bs" step="0.50" style="width:90px">
               <button class="btn" onclick="addItem()" style="margin-top:0;width:auto;padding:9px 12px"><i class="ti ti-plus" aria-hidden="true"></i></button>
             </div>
             <div class="pagar-total">
-              <span class="pagar-label">Total da compra</span>
+              <span class="pagar-label">Total de la compra</span>
               <span class="pagar-val" id="totalCompra">Bs 0.00</span>
             </div>
           </div>
           <div id="lancCamposPagamento" style="display:none">
-            <label>Valor recebido (Bs)</label>
+            <label>Valor recibido (Bs)</label>
             <input type="number" id="lancValPag" placeholder="0.00" step="0.50">
           </div>
-          <label>Observação (opcional)</label>
+          <label>Observación (opcional)</label>
           <input type="text" id="lancObs" placeholder="Ex: almuerzo del martes...">
           <button class="btn pri" onclick="salvarLancamento(this)"><i class="ti ti-device-floppy" aria-hidden="true"></i> Registrar</button>
         </div>
@@ -490,7 +490,7 @@ textarea{resize:none}
     <input type="text" id="ipInput" style="margin:8px 0 16px;width:100%" placeholder="">
     <div class="confirm-row">
       <button class="btn" onclick="ipCancel()">Cancelar</button>
-      <button class="btn pri" id="ipOkBtn" onclick="ipOk()">Adicionar</button>
+      <button class="btn pri" id="ipOkBtn" onclick="ipOk()">Agregar</button>
     </div>
   </div>
 </div>
@@ -836,7 +836,7 @@ function inputPrompt(title,placeholder,type,okLabel){
     inp.type=type||'text';
     inp.autocomplete=type==='password'?'current-password':'off';
     inp.placeholder=placeholder||'';
-    document.getElementById('ipOkBtn').textContent=okLabel||'Adicionar';
+    document.getElementById('ipOkBtn').textContent=okLabel||'Agregar';
     document.getElementById('inputPopup').classList.add('show');
     setTimeout(()=>inp.focus(),320);
     inp.onkeydown=e=>{if(e.key==='Enter')ipOk();};
@@ -1134,7 +1134,7 @@ async function abrirNovoCliente(){
 async function deleteCliente(id){
   const c=clientes.find(x=>x.id===id);
   if(!c)return;
-  const ok=await confirm2('Apagar cliente','Apagar '+c.nome+' e todo o histórico dele? Essa ação não pode ser desfeita.');
+  const ok=await confirm2('Eliminar cliente','¿Eliminar '+c.nome+' y todo su historial? Esta acción no se puede deshacer.');
   if(!ok)return;
   await loadClientes();
   const idx=clientes.findIndex(x=>x.id===id);
@@ -1157,7 +1157,7 @@ function getSaldoCliente(c){
 
 function renderClientes(){
   const el=document.getElementById('clientesList');
-  if(!clientes.length){el.innerHTML='<div class="empty">Nenhum cliente ainda</div>';return;}
+  if(!clientes.length){el.innerHTML='<div class="empty">Ningún cliente aún</div>';return;}
   el.innerHTML=clientes.map((c,i)=>{
     const saldo=getSaldoCliente(c);
     const ini=c.nome.trim()[0].toUpperCase();
@@ -1166,15 +1166,15 @@ function renderClientes(){
         <div class="cli-avatar">${ini}</div>
         <div>
           <div class="cli-name">${c.nome}</div>
-          <div class="cli-meta">${c.lancamentos.length} lançamento(s)</div>
+          <div class="cli-meta">${c.lancamentos.length} movimiento(s)</div>
         </div>
         <div class="cli-saldo">
           <div class="cli-saldo-val ${saldo>0?'neg':saldo<0?'ok':''}">
-            ${saldo>0?'Deve ':'Crédito '} ${fmt(Math.abs(saldo))}
+            ${saldo>0?'Debe ':'Crédito '} ${fmt(Math.abs(saldo))}
           </div>
           <div style="font-size:10px;color:var(--text-muted)">${saldo===0?'Quitado':''}</div>
         </div>
-        <button onclick="event.stopPropagation();deleteCliente(${c.id})" style="border:none;background:none;cursor:pointer;font-size:16px;padding:4px;margin-left:4px" aria-label="Apagar cliente">🗑️</button>
+        <button onclick="event.stopPropagation();deleteCliente(${c.id})" style="border:none;background:none;cursor:pointer;font-size:16px;padding:4px;margin-left:4px" aria-label="Eliminar cliente">🗑️</button>
       </div>
     </div>`;
   }).join('');
@@ -1213,18 +1213,17 @@ function renderDetalhe(c){
   el.className='detalle-saldo-val '+(saldo>0?'neg':saldo<0?'ok':'');
   document.getElementById('detalheQtd').textContent=c.lancamentos.length;
   const lista=document.getElementById('lancamentosList');
-  if(!c.lancamentos.length){lista.innerHTML='<div class="empty">Nenhum lançamento ainda</div>';return;}
+  if(!c.lancamentos.length){lista.innerHTML='<div class="empty">Ningún movimiento aún</div>';return;}
   lista.innerHTML=c.lancamentos.slice().reverse().map((l,i)=>{
     const isC=l.tipo==='compra';
     return `<div class="lancamento-item" style="animation-delay:${Math.min(i,10)*25}ms">
       <div class="lanc-icon ${l.tipo}">${isC?'🛒':'✅'}</div>
       <div class="lanc-desc">
-        <div class="lanc-desc-title">${isC?(l.itens&&l.itens.length?l.itens.map(x=>x.desc).join(', '):'Compra'):'Pagamento recebido'}</div>
+        <div class="lanc-desc-title">${isC?(l.itens&&l.itens.length?l.itens.map(x=>x.desc).join(', '):'Compra'):'Pago recibido'}</div>
         <div class="lanc-desc-meta">${fmtDate(l.fecha)} · ${l.obs||''}</div>
       </div>
       <div>
         <div class="lanc-val ${isC?'neg':'pos'}">${isC?'-':'+'}${fmt(isC?l.total:l.valor)}</div>
-        <button onclick="deleteLancamento(${l.id})" style="border:none;background:none;cursor:pointer;font-size:13px;display:block;margin-left:auto;margin-top:2px">🗑️</button>
       </div>
     </div>`;
   }).join('');
@@ -1239,8 +1238,8 @@ function onLancTipoChange(){
 function addItem(){
   const desc=document.getElementById('itemDesc').value.trim();
   const val=parseFloat(document.getElementById('itemVal').value)||0;
-  if(!desc){showToast('Descreva o item','err');return;}
-  if(!val){showToast('Informe o valor','err');return;}
+  if(!desc){showToast('Describa el ítem','err');return;}
+  if(!val){showToast('Ingrese el valor','err');return;}
   itensCompra.push({desc,val});
   document.getElementById('itemDesc').value='';
   document.getElementById('itemVal').value='';
@@ -1275,16 +1274,16 @@ async function salvarLancamento(btn){
   const obs=document.getElementById('lancObs').value.trim();
   let lanc={id:Date.now(),tipo,fecha:today(),obs};
   if(tipo==='compra'){
-    if(!itensCompra.length){showToast('Adicione pelo menos 1 item','err');return;}
+    if(!itensCompra.length){showToast('Agregue al menos 1 ítem','err');return;}
     lanc.itens=[...itensCompra];
     lanc.total=parseFloat(itensCompra.reduce((s,x)=>s+x.val,0).toFixed(2));
   } else {
     const val=parseFloat(document.getElementById('lancValPag').value)||0;
-    if(!val){showToast('Informe o valor recebido','err');return;}
+    if(!val){showToast('Ingrese el valor recibido','err');return;}
     lanc.valor=val;
   }
   c.lancamentos.push(lanc);
-  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader" aria-hidden="true"></i> Salvando...';}
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader" aria-hidden="true"></i> Guardando...';}
   const saved=await stWrite(KC,clientes);
   if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-device-floppy" aria-hidden="true"></i> Registrar';}
   if(!saved){c.lancamentos.pop();return;}
@@ -1293,18 +1292,9 @@ async function salvarLancamento(btn){
   document.getElementById('lancObs').value='';
   document.getElementById('lancValPag').value='';
   renderDetalhe(c);
-  showToast(tipo==='compra'?'Compra registrada!':'Pagamento registrado!','ok');
+  showToast(tipo==='compra'?'¡Compra registrada!':'¡Pago registrado!','ok');
 }
 
-async function deleteLancamento(lid){
-  const c=clientes.find(x=>x.id===clienteAtualId);
-  if(!c)return;
-  const backup=[...c.lancamentos];
-  c.lancamentos=c.lancamentos.filter(l=>l.id!==lid);
-  renderDetalhe(c);
-  const saved=await stWrite(KC,clientes);
-  if(!saved){c.lancamentos=backup;renderDetalhe(c);}
-}
 
 function checkAlerts(){
   const zone=document.getElementById('alertZone');
