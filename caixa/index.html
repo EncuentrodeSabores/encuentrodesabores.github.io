@@ -1131,21 +1131,6 @@ async function abrirNovoCliente(){
   showToast('Cliente adicionado!','ok');
 }
 
-async function deleteCliente(id){
-  const c=clientes.find(x=>x.id===id);
-  if(!c)return;
-  const ok=await confirm2('Eliminar cliente','¿Eliminar '+c.nome+' y todo su historial? Esta acción no se puede deshacer.');
-  if(!ok)return;
-  await loadClientes();
-  const idx=clientes.findIndex(x=>x.id===id);
-  if(idx===-1){renderClientes();return;}
-  const backup=clientes[idx];
-  clientes.splice(idx,1);
-  const saved=await stWrite(KC,clientes);
-  if(!saved){clientes.splice(idx,0,backup);showToast('Erro ao apagar. Tente novamente.','err');return;}
-  renderClientes();
-  showToast('Cliente apagado.','ok');
-}
 
 function getSaldoCliente(c){
   return c.lancamentos.reduce((s,l)=>{
@@ -1174,7 +1159,6 @@ function renderClientes(){
           </div>
           <div style="font-size:10px;color:var(--text-muted)">${saldo===0?'Quitado':''}</div>
         </div>
-        <button onclick="event.stopPropagation();deleteCliente(${c.id})" style="border:none;background:none;cursor:pointer;font-size:16px;padding:4px;margin-left:4px" aria-label="Eliminar cliente">🗑️</button>
       </div>
     </div>`;
   }).join('');
